@@ -1,0 +1,50 @@
+class CLU::CLImage
+	- imageFormat
+	- imageDescription
+	- memFlags
+	- memObject
+	- name
+	+ CLImage()
+	+ Initialize(...)
+	+ IsInitialized()
+	
+	
+	
+Util functions
+	CLU::RoundUpToWGSize(size_t size, size_t wgSize) -> size_t
+	CLU::SFImageToCLImage(const SFImage& sfSrc, CLImage& clDst) -> void
+	CLU::DownsampleCLImageIntoNew(const CLImage& clSrc, CLImage& clDst) -> void
+	CLU::DownsampleCLImageIntoExisting(const CLImage& clSrc, CLImage& clDst) -> void
+	CLU::ShowCLImageOnScreen(const CLImage& clToShow) -> void
+	      create temp buffer
+		  copy data in temp buffer
+		  create texture from temp buffer
+		  create sprite
+		  draw sprite with appropriate scale
+		  update window
+		  free resources
+
+class CLImageDownsampleStack
+	- list<CLImage> images : at 0 -> full size
+	+ GetCLImage(pos): CLImage&
+	+ UpdateDownsampledImages()
+	+ CreateDownsampledImages(int minX, int minY)
+	
+class PixelDiffCalc
+  - WorkspaceLevelClImages : list<CLImage> -> create at init, level 0 = full size rounded to WG_SIZE, level N = min WG_SIZE,WG_SIZE
+  - DiffBuffer : vector<int> -> create at init, size: size of workspace level[N]
+  + CalcAvgPixelDiffAtLevel(const CLImage& clImageBase, const CLImage clImageToAlign, int levelToWorkAt) -> float
+      - Both images must be at least levelToWorkAt 'deep'
+	  - During resizing the diff image, the smallest must be min WG_SIZE,WG_SIZE
+  + CalcAvgPixelDiff(const CLImage& clImageBase, const CLImage clImageToAlign) -> float
+	  find deepeset possible level
+	  Down-up refinement
+
+App functions
+	FindBestAlignment
+	FindBestAlignmentT
+	FindBestAlignmentS
+	FindBestAlignmentR
+
+
+- Load input images and create downsamples
