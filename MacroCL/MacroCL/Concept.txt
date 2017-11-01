@@ -2,7 +2,7 @@ class CLU::CLImage
 	- imageFormat
 	- imageDescription
 	- memFlags
-	- memObject
+	- memObject  !
 	- name
 	+ CLImage()
 	+ Initialize(...)
