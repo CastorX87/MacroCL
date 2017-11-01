@@ -75,6 +75,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Programming\SDKs\SFML\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Programming\SDKs\SFML\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -143,6 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MCL_Utility.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
