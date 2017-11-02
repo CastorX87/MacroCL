@@ -3,6 +3,10 @@
 
 #define SafeDelete(x) {if((x) != nullptr) { delete (x); } x = nullptr; }
 #define SafeDeleteArray(x) {if((x) != nullptr) { delete[] (x); } x = nullptr; }
+#define SafeReleaseClMemObject(x) {if((x) != MUtil::CL::INVALID_OBJECT) { clReleaseMemObject(x); x =  MUtil::CL::INVALID_OBJECT; } }
+
+typedef sf::Image SFImage;
+typedef sf::Texture SFTexture;
 
 namespace MUtil
 {
@@ -132,7 +136,7 @@ namespace MUtil
 			return value + (remaining == 0 ? 0 : (wgSize - remaining));
 		}
 		
-		class CLImage2D
+		class CLImage2D //RAII, non-copyable
 		{
 		private:
 			cl_mem mMemObject; // OpenCL image memory object
@@ -141,15 +145,18 @@ namespace MUtil
 			cl_image_desc mDescr; // OpenCL image descriptor
 			
 		public:
-			// Initializes the object with invalid values
-			CLImage2D()
-				: mMemObject(INVALID_OBJECT),
-					mName(INVALID_NAME)
-			{
-			}
+         CLImage2D(const CLImage2D&) = delete;
+         CLImage2D& operator=(const CLImage2D&) = delete;
+
+
+         // Destructor
+         ~CLImage2D()
+         {
+           SafeReleaseClMemObject(mMemObject)
+         }
 			
 			// Creates the OpenCL image object and initializes internal variables. Throws and exception if failed.
-			void Initialize(cl_context clContext, const std::wstring& name, size_t w, size_t h, size_t rowPitch, cl_channel_order channelOrder, cl_channel_type channelType)
+			void CLImage2D(cl_context clContext, const std::wstring& name, size_t w, size_t h, size_t rowPitch, cl_channel_order channelOrder, cl_channel_type channelType)
 			{
 				mName = name;
 				mFormat.image_channel_order = channelOrder;
@@ -160,7 +167,7 @@ namespace MUtil
 				
 			}
 			
-			// Returns true if teh object is alread created and returns false if it is not initialized yet.
+			// Returns true if the object is alread created and returns false if it is not initialized yet.
 			bool IsValid() const
 			{
 				return mMemObject == INVALID_OBJECT ? false : true;
