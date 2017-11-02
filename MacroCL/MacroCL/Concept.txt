@@ -29,6 +29,7 @@ class CLImageDownsampleStack
 	+ GetCLImage(pos): CLImage&
 	+ UpdateDownsampledImages()
 	+ CreateDownsampledImages(int minX, int minY)
+	INFO: texels invalid positions must be omitted!
 	
 class PixelDiffCalc
   - WorkspaceLevelClImages : list<CLImage> -> create at init, level 0 = full size rounded to WG_SIZE, level N = min WG_SIZE,WG_SIZE
