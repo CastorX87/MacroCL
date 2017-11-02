@@ -5,8 +5,8 @@
 #define SafeDeleteArray(x) {if((x) != nullptr) { delete[] (x); } x = nullptr; }
 #define SafeReleaseClMemObject(x) {if((x) != MUtil::CL::INVALID_OBJECT) { clReleaseMemObject(x); x =  MUtil::CL::INVALID_OBJECT; } }
 
-typedef sf::Image SFImage;
-typedef sf::Texture SFTexture;
+typedef sf::Image			SFImage;
+typedef sf::Texture		SFTexture;
 
 namespace MUtil
 {
@@ -32,6 +32,14 @@ namespace MUtil
 			std::wstring_convert<convert_typeX, wchar_t> converterX;
 
 			return converterX.to_bytes(wstr);
+		}
+		
+		class NonCopyable()
+		{
+			public:
+				NonCopyable() {};
+				NonCopyable(const NonCopyable&) = delete;
+				NonCopyable& (const NonCopyable&) = delete;
 		}
 	}
 	
@@ -108,11 +116,8 @@ namespace MUtil
 				"CL_INVALID_MIP_LEVEL",
 				"CL_INVALID_GLOBAL_WORK_SIZE",
 			};
-
 			const int errorCount = sizeof(errorString) / sizeof(errorString[0]);
-
 			const int index = -error;
-
 			return (index >= 0 && index < errorCount) ? errorString[index] : "";
 		}
 
@@ -136,27 +141,25 @@ namespace MUtil
 			return value + (remaining == 0 ? 0 : (wgSize - remaining));
 		}
 		
-		class CLImage2D //RAII, non-copyable
+		class CLImage2D :
+			public MUtil::Gen::NonCopyable
 		{
 		private:
-			cl_mem mMemObject; // OpenCL image memory object
-			std::wstring mName; // Readable name of the image object
-			cl_image_format mFormat; // OpenCL image format
-			cl_image_desc mDescr; // OpenCL image descriptor
+			cl_mem						mMemObject;		// OpenCL image memory object
+			std::wstring			mName;				// Readable name of the image object
+			cl_image_format		mFormat;			// OpenCL image format
+			cl_image_desc			mDescr;				// OpenCL image descriptor
 			
 		public:
-         CLImage2D(const CLImage2D&) = delete;
-         CLImage2D& operator=(const CLImage2D&) = delete;
 
-
-         // Destructor
-         ~CLImage2D()
-         {
-           SafeReleaseClMemObject(mMemObject)
-         }
+			// Destructor
+			~CLImage2D()
+			{
+				SafeReleaseClMemObject(mMemObject)
+			}
 			
 			// Creates the OpenCL image object and initializes internal variables. Throws and exception if failed.
-			void CLImage2D(cl_context clContext, const std::wstring& name, size_t w, size_t h, size_t rowPitch, cl_channel_order channelOrder, cl_channel_type channelType)
+			void CLImage2D(cl_context clContext, const std::wstring& name, size_t w, size_t h, size_t rowPitch, cl_channel_order channelOrder, cl_channel_type channelType, void* imagePtr = nullptr)
 			{
 				mName = name;
 				mFormat.image_channel_order = channelOrder;
@@ -196,6 +199,11 @@ namespace MUtil
 			{
 				return mDescr;
 			}
+		}
+		
+		// CLImage utility functions
+		inline void SFImageToCLImage(const SFImage& src, CLImage& dst)
+		{
 		}
 	}
 }
