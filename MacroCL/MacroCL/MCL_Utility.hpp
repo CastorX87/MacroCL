@@ -205,5 +205,8 @@ namespace MUtil
 		inline void SFImageToCLImage(const SFImage& src, CLImage& dst)
 		{
 		}
+      class CLImageDownsampler(){};
+      class CLImageComparator(){};
+      class CLImageDownsamplerStack(){};
 	}
 }
