@@ -108,6 +108,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>sfml-network-d.lib;sfml-system-d.lib;sfml-window-d.lib;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-main-d.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -145,11 +146,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MCL_Utility.hpp" />
+    <ClInclude Include="CLHelper.h" />
+    <ClInclude Include="CLImage.h" />
+    <ClInclude Include="CLImageComparator.h" />
+    <ClInclude Include="CLImageDownsampler.h" />
+    <ClInclude Include="CLImageDownsampleStack.h" />
+    <ClInclude Include="CLUtility.h" />
+    <ClInclude Include="Utility.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CLImage.cpp" />
+    <ClCompile Include="CLImageComparator.cpp" />
+    <ClCompile Include="CLImageDownsampler.cpp" />
+    <ClCompile Include="CLImageDownsampleStack.cpp" />
     <ClCompile Include="MacroCL.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -159,6 +170,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Downsample.cl" />
     <None Include="MacroCL.cl" />
   </ItemGroup>
   <ItemGroup>

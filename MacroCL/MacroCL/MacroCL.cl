@@ -47,31 +47,3 @@ __kernel void ClMainCalc(__write_only image2d_t imgDifference,
 	SetDataF4Img(diff, gPos, imgDifference);
 	return;
 }
-
-float4 AvgOfFour(int2 pos, image2d_t img)
-{
-	float4 sum = (float4)(0, 0, 0, 0);
-	sum += GetDataF4Img(pos + (int2)(0, 0), img);
-	sum += GetDataF4Img(pos + (int2)(0, 1), img);
-	sum += GetDataF4Img(pos + (int2)(1, 1), img);
-	sum += GetDataF4Img(pos + (int2)(1, 0), img);
-	if (sum.w <= 0)
-		return (float4)(0, 0, 0, 0);
-	return sum / sum.w;
-}
-
-__kernel void ClMainDownsampleHalfSizeAvg(
-	__read_only image2d_t imgIn,
-	__write_only image2d_t imgOut,
-	int2 outImgSize)
-{
-	int2 gPos = (int2)(get_global_id(0), get_global_id(1));
-	int2 gSize = (int2)(get_global_size(0), get_global_size(1));
-	if (gPos.x >= outImgSize.x || gPos.y >= outImgSize.y)
-	{
-		//SetDataF4Img((float4)(1, 1, 1, 1), gPos, imgOut);
-		return;
-	}
-	float4 avgOfFour = AvgOfFour(gPos * (int2)(2, 2), imgIn);
-	SetDataF4Img(avgOfFour, gPos, imgOut);
-}
