@@ -4,9 +4,9 @@
 #define SafeDelete(x) {if((x) != nullptr) { delete (x); } x = nullptr; }
 #define SafeDeleteArray(x) {if((x) != nullptr) { delete[] (x); } x = nullptr; }
 
-namespace MCL
+namespace MUtil
 {
-	namespace Util
+	namespace Gen
 	{
 		static std::string ReadWholeFile(const std::string& path)
 		{
@@ -31,8 +31,11 @@ namespace MCL
 		}
 	}
 	
-	namespace ClUtil
+	namespace CL
 	{
+		static unsigned int INVALID_OBJECT = 0xFFFFFFFF;
+		static const wcahr_t* INVALID_NAME = L"[INVALID]";
+		
 		static const char* MapErrorToString(cl_int error)
 		{
 			static const char* errorString[] = {
@@ -109,7 +112,7 @@ namespace MCL
 			return (index >= 0 && index < errorCount) ? errorString[index] : "";
 		}
 
-		static bool ResCheck(const cl_int val)
+		static bool ResultCheck(const cl_int val)
 		{
 			if (val != CL_SUCCESS)
 			{
@@ -127,6 +130,65 @@ namespace MCL
 		{
 			int remaining = value % wgSize;
 			return value + (remaining == 0 ? 0 : (wgSize - remaining));
+		}
+		
+		class CLImage2D
+		{
+		private:
+			cl_mem mMemObject; // OpenCL image memory object
+			std::wstring mName; // Readable name of the image object
+			cl_image_format mFormat; // OpenCL image format
+			cl_image_desc mDescr; // OpenCL image descriptor
+			
+		public:
+			// Initializes the object with invalid values
+			CLImage2D()
+				: mMemObject(INVALID_OBJECT),
+					mName(INVALID_NAME)
+			{
+			}
+			
+			// Creates the OpenCL image object and initializes internal variables. Throws and exception if failed.
+			void Initialize(cl_context clContext, const std::wstring& name, size_t w, size_t h, size_t rowPitch, cl_channel_order channelOrder, cl_channel_type channelType)
+			{
+				mName = name;
+				mFormat.image_channel_order = channelOrder;
+				mFormat.image_channel_data_type = channelType;
+				// Fill descriptor here
+				
+				// Create object here
+				
+			}
+			
+			// Returns true if teh object is alread created and returns false if it is not initialized yet.
+			bool IsValid() const
+			{
+				return mMemObject == INVALID_OBJECT ? false : true;
+			}
+			
+			// Returns the internal cl_mem object
+			cl_mem getMemObject() const
+			{
+				return mMemObject;
+			}
+			
+			// Returns the name of the image object
+			std::wstring getName() const
+			{
+				return mName;
+			}
+			
+			// Returns the format of the image
+			cl_image_format getFormat() const
+			{
+				return mFormat;
+			}
+			
+			// Returns the description of the image
+			cl_image_desc getDescription() const
+			{
+				return mDescr;
+			}
 		}
 	}
 }
