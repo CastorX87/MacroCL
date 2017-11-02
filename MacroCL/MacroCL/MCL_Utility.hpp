@@ -123,7 +123,7 @@ namespace MCL
 			return false;
 		}
 
-		static size_t RoundUpToWorkgroupSize(int value, int wgSize)
+		static size_t RoundUpToWGSize(int value, int wgSize)
 		{
 			int remaining = value % wgSize;
 			return value + (remaining == 0 ? 0 : (wgSize - remaining));
