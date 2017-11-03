@@ -4,6 +4,11 @@
 
 namespace CLHelp
 {
+	void CLErrorNotify(const char *errinfo, const void *private_info, size_t cb, void *user_data)
+	{
+		std::cout << "CLErrorNotify -> " << errorinfo << std::endl;
+	}
+	
 	void CopyCLImageToMemory(cl_command_queue clCommandQueue, const CLImage& clImage, std::vector<int>& tgtData)
 	{
 		const size_t origin[3]{ 0, 0, 0 };
@@ -45,7 +50,7 @@ namespace CLHelp
 		cl_context_properties propsl[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platformIds[selectedPlatform], 0 };
 		memcpy(props, propsl, sizeof(propsl));
 		cl_int errorCode;
-		contextOut = clCreateContext(propsl, 1, &devices[deviceUsed], NULL, NULL, &errorCode);
+		contextOut = clCreateContext(propsl, 1, &devices[deviceUsed], (CLErrorNotify), NULL, &errorCode);
 		CLUtil::ResultCheck(errorCode, L"Can't create OpenCL context!");
 		commandQueueOut = clCreateCommandQueue(contextOut, devices[deviceUsed], 0, &errorCode);
 		CLUtil::ResultCheck(errorCode, L"Can't create OpenCL command queue!");
