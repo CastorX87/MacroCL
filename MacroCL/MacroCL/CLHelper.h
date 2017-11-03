@@ -55,7 +55,7 @@ namespace CLHelp
 		commandQueueOut = clCreateCommandQueue(contextOut, devices[deviceUsed], 0, &errorCode);
 		CLUtil::ResultCheck(errorCode, L"Can't create OpenCL command queue!");
 		selectedDeviceOut = devices[deviceUsed];
-		//SafeDeleteArray(devices);
+		SafeDeleteArray(devices);
 	}
 
 	void LoadProgram(cl_context clContext, cl_device_id clDevice, const std::wstring sourceFilePath, cl_program& programOut)
