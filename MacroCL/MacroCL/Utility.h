@@ -1,4 +1,7 @@
 #pragma once
+#ifndef _UTILITY_H_
+#define _UTILITY_H
+
 #include "stdafx.h"
 
 #define SafeDelete(x) {if((x) != nullptr) { delete (x); } x = nullptr; }
@@ -9,6 +12,11 @@ typedef sf::Texture		SFTexture;
 
 namespace Util
 {
+	inline void PrintLog(const std::wstring msg) { std::wcout << msg; }
+	inline void PrintLog(const std::string msg) { std::cout << msg; }
+	inline void PrintLogLine(const std::wstring msg) { std::wcout << msg << std::endl; }
+	inline void PrintLogLine(const std::string msg) { std::cout << msg << std::endl; }
+
 	class NonCopyable
 	{
 	public:
@@ -16,8 +24,6 @@ namespace Util
 		NonCopyable(const NonCopyable&) = delete;
 		NonCopyable& operator=(const NonCopyable&) = delete;
 	};
-
-	
 
 	static std::wstring StrToWStr(const std::string& str)
 	{
@@ -42,3 +48,4 @@ namespace Util
 	}
 }
 
+#endif

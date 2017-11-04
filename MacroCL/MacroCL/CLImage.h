@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef _CLIMAGE_H_
+#define _CLIMAGE_H_
+
 #include "stdafx.h"
 #include "Utility.h"
 #include "CLUtility.h"
@@ -16,12 +20,14 @@ public:
 	// Destructor
 	~CLImage()
 	{
+		Util::PrintLogLine(std::wstring(L"[-] Releasing CLImage '") + mName + L"'");
 		clReleaseMemObject(mMemObject);
 	}
 
 	// Creates the OpenCL image object and initializes internal variables. Throws and exception if failed.
 	CLImage(cl_context clContext, std::wstring name, size_t w, size_t h, size_t rowPitch, cl_mem_flags memFlags, cl_channel_order channelOrder, cl_channel_type channelType, void* imagePtr = nullptr)
 	{
+		Util::PrintLogLine(std::wstring(L"[+] Creating CLImage '") + name + L"'");
 		mName = name;
 		
 		mMemFlags = memFlags;
@@ -76,13 +82,30 @@ public:
 		return mDescr.image_width;
 	}
 
+	size_t GetSizeEvenX() const
+	{
+		return mDescr.image_width % 2 == 0 ? mDescr.image_width : mDescr.image_width - 1;
+	}
+
 	size_t GetSizeY() const
 	{
 		return mDescr.image_height;
+	}
+
+	size_t GetSizeEvenY() const
+	{
+		return mDescr.image_height % 2 == 0 ? mDescr.image_height : mDescr.image_height - 1;
 	}
 
 	cl_int2 GetSize() const
 	{
 		return cl_int2{ (cl_int)GetSizeX(), (cl_int)GetSizeY() };
 	}
+
+	cl_int2 GetSizeEven() const
+	{
+		return cl_int2{ (cl_int)GetSizeEvenX(), (cl_int)GetSizeEvenY() };
+	}
 };
+
+#endif

@@ -157,6 +157,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CLHelper.cpp" />
     <ClCompile Include="CLImage.cpp" />
     <ClCompile Include="CLImageComparator.cpp" />
     <ClCompile Include="CLImageDownsampler.cpp" />

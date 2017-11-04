@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef _CLUTILITY_H_
+#define _CLUTILITY_H_
+
 #include "stdafx.h"
 #include "Utility.h"
 
@@ -108,15 +112,17 @@ namespace CLUtil
 		return true;
 	}
 
-	inline size_t RoundUpToWGSize(int value, int wgSize)
+	inline size_t RoundUpToWGSize(size_t value, size_t wgSize)
 	{
-		int remaining = value % wgSize;
+		size_t remaining = value % wgSize;
 		return value + (remaining == 0 ? 0 : (wgSize - remaining));
 	}
 
 	inline void RoundUpToWGSize(size_t elemX, size_t elemY, size_t wgSizeX, size_t wgSizeY, size_t& gSizeX, size_t& gSizeY)
 	{
-		gSizeX = RoundUpToWGSize(elemX, wgSizeX);
-		gSizeY = RoundUpToWGSize(elemY, wgSizeY);
+		gSizeX = (size_t)RoundUpToWGSize(elemX, wgSizeX);
+		gSizeY = (size_t)RoundUpToWGSize(elemY, wgSizeY);
 	}
 }
+
+#endif

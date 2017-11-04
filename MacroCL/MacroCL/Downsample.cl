@@ -25,7 +25,7 @@ float4 AvgOfFour(int2 pos, image2d_t img)
 __kernel void DownsampleMain(
 	__read_only		image2d_t		inputImage,				// Input image to be downsized
 	__write_only	image2d_t		outputImage,			// Output image
-								int2				inputImageSize)		// Size (width/height) of the input image
+								int2				inputImageSize)		// Size (width and height) of the input image THIS MUST BE AN EVEN NUMBER!
 {
 	int2 gPos = (int2)(get_global_id(0), get_global_id(1));
 	if (gPos.x >= inputImageSize.x || gPos.y >= inputImageSize.y)
