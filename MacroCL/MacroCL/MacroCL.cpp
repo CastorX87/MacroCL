@@ -18,17 +18,136 @@ cl_device_id clDevice;
 
 void Show(CLImage& clImage)
 {
-	Image imgDownsized;
-	Texture texDownsized;
-	Sprite sprDownsized;
-	std::vector<int> pixelData;
-	CLHelp::ReadCLImageData(clCommandQueue, clImage, pixelData);
-	imgDownsized.create((unsigned int)clImage.GetSizeX(), (unsigned int)clImage.GetSizeY(), (sf::Uint8*)pixelData.data());
-	texDownsized.create(imgDownsized.getSize().x, imgDownsized.getSize().y);
-	texDownsized.update(imgDownsized, 0, 0);
-	sprDownsized.setTexture(texDownsized);
-	sprDownsized.setScale(1, 1);
-	mainWindow.draw(sprDownsized);
+	Image img;
+	Texture tex;
+	Sprite sprite;
+	std::vector<int> pixels;
+	CLHelp::ReadCLImageData(clCommandQueue, clImage, pixels);
+	img.create((unsigned int)clImage.GetSizeX(), (unsigned int)clImage.GetSizeY(), (sf::Uint8*)pixels.data());
+	tex.create(img.getSize().x, img.getSize().y);
+	tex.update(img, 0, 0);
+	tex.setSmooth(true);
+	sprite.setTexture(tex);
+	float scale = (float)MainWindowSize.y / clImage.GetSizeY();
+	sprite.setScale(scale, scale);
+	mainWindow.draw(sprite);
+}
+
+
+MMAligmentData BestAlignmentDirRotate(CLImageComparator& comparator, CLImage& imageBase, CLImage& imageToAlign, MMAligmentData& startAlignment, float startScore, float& score)
+{
+	MMAligmentData testAlignment = startAlignment;
+	MMAligmentData bestAlignment = startAlignment;
+	float bestScore = startScore;
+
+	float TRY_VECTOR[]{  -8, -4, -2, -1.5, -0.75, -0.35, 0.35, 0.75, 1.5, 2, 4, 8};
+	//float TRY_VECTOR[]{ -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6 };
+	for (int ix = 0; ix < (sizeof(TRY_VECTOR) / sizeof(float)); ix++)
+	{
+		float ds = TRY_VECTOR[ix];
+		testAlignment.rotate = startAlignment.rotate + ds;
+
+		float v = comparator.CompareCLImages(testAlignment, imageBase, imageToAlign);
+		if (v < bestScore)
+		{
+			bestScore = v;
+			bestAlignment = testAlignment;
+		}
+	}
+	score = bestScore;
+	return bestAlignment;
+}
+
+MMAligmentData BestAlignmentDirScale(CLImageComparator& comparator, CLImage& imageBase, CLImage& imageToAlign, MMAligmentData& startAlignment, float startScore, float& score)
+{
+	MMAligmentData testAlignment = startAlignment;
+	MMAligmentData bestAlignment = startAlignment;
+	float bestScore = startScore;
+	float TRY_VECTOR[]{ -0.1, -0.05, -0.025, -0.0125,-0.0065, -0.003, 0.003, 0.0065, 0.0125, 0.025, 0.05, 0.1 };
+	//float TRY_VECTOR[]{ -0.05, -0.04, -0.03, -0.02, -0.01, 0.01, 0.02, 0.03, 0.04, 0.05 };
+	for (int ix = 0; ix < (sizeof(TRY_VECTOR) / sizeof(float)); ix++)
+	{
+		float ds = TRY_VECTOR[ix];
+
+		testAlignment.scale = startAlignment.scale + ds;
+
+		float v = comparator.CompareCLImages(testAlignment, imageBase, imageToAlign);
+		if (v < bestScore)
+		{
+			bestScore = v;
+			bestAlignment = testAlignment;
+		}
+	}
+	score = bestScore;
+	return bestAlignment;
+}
+
+MMAligmentData BestAlignmentDirTranslate(CLImageComparator& comparator, CLImage& imageBase, CLImage& imageToAlign, MMAligmentData& startAlignment, float startScore, float& score)
+{
+	MMAligmentData testAlignment = startAlignment;
+	MMAligmentData bestAlignment = startAlignment;
+	float bestScore = startScore;
+	int TRY_VECTOR[]{ -16, -8, -4, -2, -1, 1, 2, 4, 8, 16 };
+	//int TRY_VECTOR[]{ -5, -4, -3, -2, -1, 1, 2, 3, 4, 5 };
+	for (int ix = 0; ix < (sizeof(TRY_VECTOR) / sizeof(int)); ix++)
+	{
+		int dx = TRY_VECTOR[ix];
+		for (int iy = 0; iy < (sizeof(TRY_VECTOR) / sizeof(int)); iy++)
+		{
+			int dy = TRY_VECTOR[iy];
+			if (sqrtf((float)dx * dx + (float)dy * dy) <= fabs((float)TRY_VECTOR[0]))
+			{
+				testAlignment.translation = startAlignment.translation + sf::Vector2f(dx, dy);
+				float v = comparator.CompareCLImages(testAlignment, imageBase, imageToAlign);
+				if (v < bestScore)
+				{
+					bestScore = v;
+					bestAlignment = testAlignment;
+				}
+			}
+		}
+	}
+	score = bestScore;
+	return bestAlignment;
+}
+
+MMAligmentData FindBestAlignment(CLImageComparator& comparator, CLImageDownsampleStack& imgBaseStc, CLImageDownsampleStack& imgAlignStc, MMAligmentData& startAlignment)
+{
+	int dsLevel = min(comparator.GetStack().GetNumDepthLevels(), min(imgBaseStc.GetNumDepthLevels(), imgAlignStc.GetNumDepthLevels())) - 1;
+	MMAligmentData currAlignment = startAlignment;
+	float bestScore = 255;//= comparator.CompareCLImages(startAlignment, imgBaseStc.GetCLImageAtDepthLevel(dsLevel), imgAlignStc.GetCLImageAtDepthLevel(dsLevel));
+	std::wcout << L"Starting score " << bestScore << std::endl;
+	float lastScore = bestScore;
+	while (true)
+	{
+		currAlignment = BestAlignmentDirTranslate(comparator, imgBaseStc.GetCLImageAtDepthLevel(dsLevel), imgAlignStc.GetCLImageAtDepthLevel(dsLevel), currAlignment, bestScore, bestScore);
+		currAlignment = BestAlignmentDirScale(comparator, imgBaseStc.GetCLImageAtDepthLevel(dsLevel), imgAlignStc.GetCLImageAtDepthLevel(dsLevel), currAlignment, bestScore, bestScore);
+		currAlignment = BestAlignmentDirRotate(comparator, imgBaseStc.GetCLImageAtDepthLevel(dsLevel), imgAlignStc.GetCLImageAtDepthLevel(dsLevel), currAlignment, bestScore, bestScore);
+		//std::cout << "DS Level:" << dsLevel << " -> X:" << currAlignment.translation.x << " Y:" << currAlignment.translation.y << " S:" << currAlignment.scale << " R:" << currAlignment.rotate << "   Score:" << bestScore << std::endl;
+		comparator.CompareCLImages(currAlignment, imgBaseStc.GetCLImageAtDepthLevel(dsLevel), imgAlignStc.GetCLImageAtDepthLevel(dsLevel));
+		if (lastScore == bestScore)
+		{
+			if (dsLevel == 0)
+				break;
+			dsLevel--;
+			bestScore = 255;
+			currAlignment.translation.x *= 2;
+			currAlignment.translation.y *= 2;
+			std::wcout << L"Local minimal score reched on level " << dsLevel << std::endl;
+		}
+		lastScore = bestScore;
+
+		/*mainWindow.clear(sf::Color(100, 100, 100, 255));
+		Show(comparator.GetCompareCLImageAtDepth(dsLevel));
+		mainWindow.display();*/
+	}
+
+	mainWindow.clear(sf::Color(100, 100, 100, 255));
+	comparator.CompareCLImages(currAlignment, imgBaseStc.GetCLImageAtDepthLevel(0), imgAlignStc.GetCLImageAtDepthLevel(0));
+	Show(comparator.GetCompareCLImageAtDepth(0));
+	mainWindow.display();
+
+	return currAlignment;
 }
 
 int main()
@@ -39,14 +158,25 @@ int main()
 
 	CLHelp::InitOpenCL(clContext, clCommandQueue, clDevice);
 
-	unique_ptr<CLImage> fullCLImage1 = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\1b.jpg", CL_MEM_READ_WRITE);
-	unique_ptr<CLImage> fullCLImage2 = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\2b.jpg", CL_MEM_READ_WRITE);
-	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, fullCLImage1->GetSize(), cl_int2{ 32, 32 }, 10);
+	unique_ptr<CLImage> fullCLImageA = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\A1.jpg", CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullCLImageB = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\A2.jpg", CL_MEM_READ_WRITE);
+
+	CLImageDownsampleStack stackCLImageA(L"ImgA DS", clContext, clDevice, clCommandQueue);
+	CLImageDownsampleStack stackCLImageB(L"ImgB DS", clContext, clDevice, clCommandQueue);
+
+	stackCLImageA.SetBaseCLImage(std::move(fullCLImageA));
+	stackCLImageB.SetBaseCLImage(std::move(fullCLImageB));
+
+	stackCLImageA.UpdateDownsampledCLImages(cl_int2{ 32, 32 }, 10);
+	stackCLImageB.UpdateDownsampledCLImages(cl_int2{ 32, 32 }, 10);
+
+	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, stackCLImageA.GetCLImageAtDepthLevel(0).GetSize(), cl_int2{ 32, 32 }, 10);
 	float r = 0;
 	float s = 1;
 	int x = 0;
 	int y = 0;
 	bool controlPressed = false;
+	MMAligmentData alignment;
 	while (mainWindow.isOpen())
 	{
 		sf::Event event;
@@ -56,23 +186,30 @@ int main()
 			{
 				mainWindow.close();
 			}
-			if (event.type == sf::Event::MouseMoved)
+			if (event.type == sf::Event::MouseWheelMoved)
 			{
-				x = event.mouseMove.x - comparator.GetCompareCLImageFullSize().GetSizeX() / 2;
-				y = event.mouseMove.y - comparator.GetCompareCLImageFullSize().GetSizeY() / 2;
-			}
-			if (event.type == sf::Event::MouseWheelScrolled)
-			{
-				if(controlPressed)
-					s += event.mouseWheelScroll.delta * 0.0025f;
-				else
-					r += event.mouseWheelScroll.delta * 0.25f;
+				float score = comparator.CompareCLImages(alignment, stackCLImageA.GetCLImageAtDepthLevel(0), stackCLImageB.GetCLImageAtDepthLevel(0));
+				Util::PrintLogLine(wstring(L"score=") + to_wstring(score));
+				Util::PrintLogLine(wstring(L"alignment=") + alignment.ToString());
+				mainWindow.clear(sf::Color(100, 100, 100, 255));
+				Show(comparator.GetCompareCLImageAtDepth(0));
+				mainWindow.display();
 			}
 			if (event.type == sf::Event::KeyPressed)
 			{
 				if (event.key.code == sf::Keyboard::Key::LControl)
 				{
 					controlPressed = true;
+				}
+				if (event.key.code == sf::Keyboard::Key::Space)
+				{
+					alignment.rotate = 0;
+					alignment.scale = 1;
+					alignment.translation.x = 0;
+					alignment.translation.y = 0;
+					alignment = FindBestAlignment(comparator, stackCLImageA, stackCLImageB, alignment);
+					Util::PrintLogLine(wstring(L"alignment=") + alignment.ToString());
+					Util::PrintLogLine(L"");
 				}
 			}
 			if (event.type == sf::Event::KeyReleased)
@@ -82,27 +219,6 @@ int main()
 					controlPressed = false;
 				}
 			}
-
-			mainWindow.clear(sf::Color(100,100,100,255));
-
-			MMAligmentData alignment;
-			
-			sf::Clock clk;
-			float cmpResult;
-			alignment.rotate = r;
-			alignment.scale = s;
-				alignment.translation.x = x;
-				alignment.translation.y = y;
-				cmpResult = comparator.CompareCLImages(alignment, *fullCLImage1, *fullCLImage2);
-				Show(comparator.GetCompareCLImageFullSize());
-				mainWindow.display();
-			//Util::PrintLogLine(wstring(L"deltaTime=") + to_wstring(clk.getElapsedTime().asMicroseconds() / 1000.0f) + L"ms");
-			Util::PrintLogLine(wstring(L"cmpResult=") + to_wstring(cmpResult));
-			Util::PrintLogLine(wstring(L"alignment=") + alignment.ToString());
-			//Util::PrintLogLine(wstring(L"depth=") + to_wstring(comparator.GetStack().GetNumDepthLevels()));
-			//Util::PrintLogLine(wstring(L"minSize=") + to_wstring(comparator.GetCompareCLImageDeepest().GetSizeX()) + L"x" + to_wstring(comparator.GetCompareCLImageDeepest().GetSizeY()));
-			Util::PrintLogLine(L"");
-
 		}
 	}
 
