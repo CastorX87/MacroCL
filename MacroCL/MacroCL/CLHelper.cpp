@@ -70,7 +70,7 @@ void CLHelp::LoadProgram(cl_context clContext, cl_device_id clDevice, const std:
 	size_t clKernelSize = src.length();
 	programOut = clCreateProgramWithSource(clContext, 1, (const char **)&(scrPtr), &clKernelSize, &clErrorCode);
 	CLUtil::ResultCheck(clErrorCode, L"Can't create OpenCL program!");
-	CLUtil::ResultCheck(clBuildProgram(programOut, 0, NULL, NULL, NULL, NULL), L"Can't build OpenCL program!");
+	clBuildProgram(programOut, 0, NULL, NULL, NULL, NULL);
 	cl_build_status build_status;
 	clGetProgramBuildInfo(programOut, clDevice, CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &build_status, NULL);
 	char *build_log;
@@ -79,6 +79,7 @@ void CLHelp::LoadProgram(cl_context clContext, cl_device_id clDevice, const std:
 	build_log = new char[ret_val_size + 1];
 	clGetProgramBuildInfo(programOut, clDevice, CL_PROGRAM_BUILD_LOG, ret_val_size, build_log, NULL);
 	build_log[ret_val_size] = '\0';
+	
 	std::cout << "BUILD LOG: " << std::endl;
 	std::cout << build_log << std::endl;
 	delete[] build_log;

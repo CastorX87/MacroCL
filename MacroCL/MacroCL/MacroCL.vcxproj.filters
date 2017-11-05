@@ -67,10 +67,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MacroCL.cl">
+    <None Include="Downsample.cl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Downsample.cl">
+    <None Include="Compare.cl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

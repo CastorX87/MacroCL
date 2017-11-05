@@ -23,7 +23,7 @@ private:
 	cl_command_queue mCommandQueue;
 	
 public:
-	CLImageDownsampler(cl_context context, cl_device_id device, cl_command_queue commandQueue);
+	CLImageDownsampler(wstring name, cl_context context, cl_device_id device, cl_command_queue commandQueue);
 	~CLImageDownsampler();
 	void DownsampleImageHalfSize(const CLImage& inputImage, CLImage& outputImage) const;
 	unique_ptr<CLImage> DownsampleImageHalfSize(const CLImage& inputImage, cl_mem_flags memFlags) const;

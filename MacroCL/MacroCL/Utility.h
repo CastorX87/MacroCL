@@ -12,10 +12,17 @@ typedef sf::Texture		SFTexture;
 
 namespace Util
 {
-	inline void PrintLog(const std::wstring msg) { std::wcout << msg; }
-	inline void PrintLog(const std::string msg) { std::cout << msg; }
-	inline void PrintLogLine(const std::wstring msg) { std::wcout << msg << std::endl; }
-	inline void PrintLogLine(const std::string msg) { std::cout << msg << std::endl; }
+	inline void PrintLogLineDebug(const std::wstring msg)
+	{
+#ifdef DEBUG
+		std::wcout << msg << std::endl;
+#endif // DEBUG
+	}
+
+	inline void PrintLogLine(const std::wstring msg)
+	{
+		std::wcout << msg << std::endl;
+	}
 
 	class NonCopyable
 	{

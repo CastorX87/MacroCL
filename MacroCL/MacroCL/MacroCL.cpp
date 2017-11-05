@@ -3,21 +3,33 @@
 #include "CLHelper.h"
 #include "CLImageDownsampler.h"
 #include "CLImageDownsampleStack.h"
+#include "CLImageComparator.h"
 
 using namespace std;
 using namespace sf;
 
-const cl_int2 MainWindowSize{ 1024, 768 };
+const cl_int2 MainWindowSize{ 1280, 900 };
 
 RenderWindow mainWindow;
-
-Image imgDownsized;
-Texture texDownsized;
-Sprite sprDownsized;
 
 cl_context clContext;
 cl_command_queue clCommandQueue;
 cl_device_id clDevice;
+
+void Show(CLImage& clImage)
+{
+	Image imgDownsized;
+	Texture texDownsized;
+	Sprite sprDownsized;
+	std::vector<int> pixelData;
+	CLHelp::ReadCLImageData(clCommandQueue, clImage, pixelData);
+	imgDownsized.create((unsigned int)clImage.GetSizeX(), (unsigned int)clImage.GetSizeY(), (sf::Uint8*)pixelData.data());
+	texDownsized.create(imgDownsized.getSize().x, imgDownsized.getSize().y);
+	texDownsized.update(imgDownsized, 0, 0);
+	sprDownsized.setTexture(texDownsized);
+	sprDownsized.setScale(1, 1);
+	mainWindow.draw(sprDownsized);
+}
 
 int main()
 {
@@ -27,26 +39,14 @@ int main()
 
 	CLHelp::InitOpenCL(clContext, clCommandQueue, clDevice);
 
-	CLImageDownsampler downsampler(clContext, clDevice, clCommandQueue);
-	CLImageDownsampleStack downsamplerStack(L"File downsample stack");
-
-	unique_ptr<CLImage> fullCLImage = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\1.jpg", CL_MEM_READ_WRITE);
-	//unique_ptr<CLImage> hslfCLImage(new CLImage(clContext, L"Downsampled image (half size)", fullCLImage->GetSizeX() / 2, fullCLImage->GetSizeY() / 2, 0, CL_MEM_READ_WRITE, CL_RGBA, CL_UNORM_INT8));
-
-	//downsampler.DownsampleImageHalfSize(*fullCLImage, *hslfCLImage);
-	downsamplerStack.SetBaseCLImage(std::move(fullCLImage));
-	downsamplerStack.UpdateDownsampledCLImages(downsampler, cl_int2{ 64, 64 }, 10);
-
-	CLImage& hslfCLImage = downsamplerStack.GetCLImageAtDepthLevel(3);
-
-	std::vector<int> pixelData;
-	CLHelp::ReadCLImageData(clCommandQueue, hslfCLImage, pixelData);
-
-	imgDownsized.create((unsigned int)hslfCLImage.GetSizeX(), (unsigned int)hslfCLImage.GetSizeY(), (sf::Uint8*)pixelData.data());
-	texDownsized.create(imgDownsized.getSize().x, imgDownsized.getSize().y);
-	texDownsized.update(imgDownsized, 0, 0);
-	sprDownsized.setTexture(texDownsized);
-
+	unique_ptr<CLImage> fullCLImage1 = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\1b.jpg", CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullCLImage2 = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\2b.jpg", CL_MEM_READ_WRITE);
+	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, fullCLImage1->GetSize(), cl_int2{ 32, 32 }, 10);
+	float r = 0;
+	float s = 1;
+	int x = 0;
+	int y = 0;
+	bool controlPressed = false;
 	while (mainWindow.isOpen())
 	{
 		sf::Event event;
@@ -56,9 +56,53 @@ int main()
 			{
 				mainWindow.close();
 			}
+			if (event.type == sf::Event::MouseMoved)
+			{
+				x = event.mouseMove.x - comparator.GetCompareCLImageFullSize().GetSizeX() / 2;
+				y = event.mouseMove.y - comparator.GetCompareCLImageFullSize().GetSizeY() / 2;
+			}
+			if (event.type == sf::Event::MouseWheelScrolled)
+			{
+				if(controlPressed)
+					s += event.mouseWheelScroll.delta * 0.0025f;
+				else
+					r += event.mouseWheelScroll.delta * 0.25f;
+			}
+			if (event.type == sf::Event::KeyPressed)
+			{
+				if (event.key.code == sf::Keyboard::Key::LControl)
+				{
+					controlPressed = true;
+				}
+			}
+			if (event.type == sf::Event::KeyReleased)
+			{
+				if (event.key.code == sf::Keyboard::Key::LControl)
+				{
+					controlPressed = false;
+				}
+			}
 
-			mainWindow.draw(sprDownsized);
-			mainWindow.display();
+			mainWindow.clear(sf::Color(100,100,100,255));
+
+			MMAligmentData alignment;
+			
+			sf::Clock clk;
+			float cmpResult;
+			alignment.rotate = r;
+			alignment.scale = s;
+				alignment.translation.x = x;
+				alignment.translation.y = y;
+				cmpResult = comparator.CompareCLImages(alignment, *fullCLImage1, *fullCLImage2);
+				Show(comparator.GetCompareCLImageFullSize());
+				mainWindow.display();
+			//Util::PrintLogLine(wstring(L"deltaTime=") + to_wstring(clk.getElapsedTime().asMicroseconds() / 1000.0f) + L"ms");
+			Util::PrintLogLine(wstring(L"cmpResult=") + to_wstring(cmpResult));
+			Util::PrintLogLine(wstring(L"alignment=") + alignment.ToString());
+			//Util::PrintLogLine(wstring(L"depth=") + to_wstring(comparator.GetStack().GetNumDepthLevels()));
+			//Util::PrintLogLine(wstring(L"minSize=") + to_wstring(comparator.GetCompareCLImageDeepest().GetSizeX()) + L"x" + to_wstring(comparator.GetCompareCLImageDeepest().GetSizeY()));
+			Util::PrintLogLine(L"");
+
 		}
 	}
 

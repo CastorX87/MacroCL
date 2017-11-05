@@ -21,6 +21,32 @@ namespace CLUtil
 		}
 	};
 
+	struct MMAligmentData
+	{
+		sf::Vector2f translation;
+		float scale;
+		float rotate;
+
+		std::string ToString()
+		{
+			return std::string("[T:{") + std::to_string(translation.x) + "," + std::to_string(translation.y) + "},S:" + std::to_string(scale) + ",R:" + std::to_string(rotate) + "]";
+		}
+
+		MMAligmentData()
+		{
+			translation = sf::Vector2f(0, 0);
+			scale = 1;
+			rotate = 0;
+		}
+
+		MMAligmentData(const sf::Vector2f& Translate, float Scale, float Rotate)
+		{
+			translation = Translate;
+			scale = Scale;
+			rotate = Rotate;
+		}
+	};
+
 	inline const char* MapErrorToString(cl_int error)
 	{
 		static const char* errorString[] = {

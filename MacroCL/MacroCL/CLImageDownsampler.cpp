@@ -5,8 +5,10 @@ using namespace CLHelp;
 using namespace CLUtil;
 using namespace std;
 
-CLImageDownsampler::CLImageDownsampler(cl_context context, cl_device_id device, cl_command_queue commandQueue)
+CLImageDownsampler::CLImageDownsampler(wstring name, cl_context context, cl_device_id device, cl_command_queue commandQueue)
 {
+	Util::PrintLogLineDebug(std::wstring(L"[+] Creating CLImage downsampler'") + name + L"'");
+
 	mContext = context;
 	mDevice = device;
 	mCommandQueue = commandQueue;
@@ -23,6 +25,7 @@ CLImageDownsampler::~CLImageDownsampler()
 
 void CLImageDownsampler::DownsampleImageHalfSize(const CLImage& inputImage, CLImage& outputImage) const
 {
+	Util::PrintLogLineDebug(wstring(L"[*] Resizing CLImage '") + inputImage.getName() + L"' -> '" + outputImage.getName() + L"'");
 	size_t gSize[2];
 	size_t lSize[2]{ 16, 16 };
 	cl_int2 inputSize = inputImage.GetSizeEven();

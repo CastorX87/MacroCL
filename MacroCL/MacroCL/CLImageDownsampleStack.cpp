@@ -3,16 +3,16 @@
 
 using namespace std;
 
-CLImageDownsampleStack::CLImageDownsampleStack(wstring name)
+CLImageDownsampleStack::CLImageDownsampleStack(wstring name, cl_context context, cl_device_id device, cl_command_queue commandQueue)
+: mDownsampler(wstring(L"Downsampler of ") + name, context, device, commandQueue)
 {
-	Util::PrintLog(wstring(L"[+] Creating CLImage downsample stack '") + name + L"': ");
+	Util::PrintLogLineDebug(wstring(L"[+] Creating CLImage downsample stack '") + name + L"'");
 	mName = name;
-	Util::PrintLogLine("OK");
 }
 
 CLImageDownsampleStack::~CLImageDownsampleStack()
 {
-	Util::PrintLogLine(std::wstring(L"[-] Releasing CLImage stack '") + mName + L"'");
+	Util::PrintLogLineDebug(std::wstring(L"[-] Releasing CLImage stack '") + mName + L"'");
 	mCLImageStack.clear();
 }
 
@@ -29,7 +29,7 @@ cl_int2 CLImageDownsampleStack::CalcSizeAtDepthLevel(cl_int2 size, int depthLeve
 
 void CLImageDownsampleStack::SetBaseCLImage(unique_ptr<CLImage> toplevelImage)
 {
-	Util::PrintLogLine(wstring(L"[*] Setting CLImage downsample stack '") + mName + L"' base image to '" + toplevelImage->getName() + L"'");
+	Util::PrintLogLineDebug(wstring(L"[*] Setting CLImage downsample stack '") + mName + L"' base image to '" + toplevelImage->getName() + L"'");
 	if (mCLImageStack.size() == 0)
 	{
 		mCLImageStack.push_back(std::move(toplevelImage));
@@ -48,10 +48,11 @@ const CLImage& CLImageDownsampleStack::GetCLImageAtDepthLevel(int depthLevel) co
 	return *mCLImageStack[depthLevel];
 }
 
-void CLImageDownsampleStack::UpdateDownsampledCLImages(CLImageDownsampler& downsampler, cl_int2 minSizes, int maxDepthLevel)
+void CLImageDownsampleStack::UpdateDownsampledCLImages(cl_int2 minSizes, int maxDepthLevel)
 {
-	Util::PrintLogLine(wstring(L"[*] Updating/creating downsampled images in DSStack '") + mName + L"'");
+	Util::PrintLogLineDebug(wstring(L"[*] Updating/creating downsampled images in DSStack '") + mName + L"'");
 
+	int lastUsedDepthLevel = 0;
 	// Go through all levels
 	for (int i = 1; i < maxDepthLevel; i++)
 	{
@@ -62,10 +63,9 @@ void CLImageDownsampleStack::UpdateDownsampledCLImages(CLImageDownsampler& downs
 		if (mCLImageStack.size() <= i || mCLImageStack[i]->GetSizeX() != dsSize.x || mCLImageStack[i]->GetSizeY() != dsSize.y)
 		{
 			CLImage* newCLImage =
-				new CLImage(downsampler.GetContext(),
-					mCLImageStack[0]->getName() + L" downsample lvl " + to_wstring(i),
-					dsSize.x, dsSize.y,
-					0,
+				new CLImage(mDownsampler.GetContext(),
+					L"Temp", // Name will be updated later
+					dsSize.x, dsSize.y,	0,
 					CL_MEM_READ_WRITE,
 					mCLImageStack[0]->getFormat().image_channel_order,
 					mCLImageStack[0]->getFormat().image_channel_data_type,
@@ -82,7 +82,16 @@ void CLImageDownsampleStack::UpdateDownsampledCLImages(CLImageDownsampler& downs
 				mCLImageStack[i].reset(newCLImage);
 			}
 		}
-		downsampler.DownsampleImageHalfSize(*mCLImageStack[i - 1], *mCLImageStack[i]);
+		// Set name
+		mCLImageStack[i]->setName(mCLImageStack[0]->getName() + L" Dowsample[" + to_wstring(i) + L"]");
+		mDownsampler.DownsampleImageHalfSize(*mCLImageStack[i - 1], *mCLImageStack[i]);
+		lastUsedDepthLevel = i;
+	}
+
+	// Release unnecessary levels
+	if (lastUsedDepthLevel >= mCLImageStack.size())
+	{
+		mCLImageStack.resize(lastUsedDepthLevel + 1);
 	}
 }
 

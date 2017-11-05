@@ -20,14 +20,14 @@ public:
 	// Destructor
 	~CLImage()
 	{
-		Util::PrintLogLine(std::wstring(L"[-] Releasing CLImage '") + mName + L"'");
+		Util::PrintLogLineDebug(std::wstring(L"[-] Releasing CLImage '") + mName + L"'");
 		clReleaseMemObject(mMemObject);
 	}
 
 	// Creates the OpenCL image object and initializes internal variables. Throws and exception if failed.
 	CLImage(cl_context clContext, std::wstring name, size_t w, size_t h, size_t rowPitch, cl_mem_flags memFlags, cl_channel_order channelOrder, cl_channel_type channelType, void* imagePtr = nullptr)
 	{
-		Util::PrintLogLine(std::wstring(L"[+] Creating CLImage '") + name + L"'");
+		Util::PrintLogLineDebug(std::wstring(L"[+] Creating CLImage '") + name + L"'");
 		mName = name;
 		
 		mMemFlags = memFlags;
@@ -57,6 +57,12 @@ public:
 	const std::wstring& getName() const
 	{
 		return mName;
+	}
+
+	// Sets the name of the image object
+	const void setName(std::wstring newName)
+	{
+		mName = newName;
 	}
 
 	// Returns the format of the image
