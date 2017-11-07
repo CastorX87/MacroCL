@@ -22,7 +22,7 @@ public:
 	CLImageComparator(wstring name, cl_context context, cl_device_id device, cl_command_queue commandQueue, cl_int2 workBufferSize, cl_int2 minSizeDownsample, int maxDepthDownsample);
 	~CLImageComparator();
 
-	float CompareCLImages(CLUtil::MMAligmentData al, CLImage& imageBase, CLImage& imageToAlign);
+	float CompareCLImages(CLUtil::MMAligmentData al, CLImage& imageBase, CLImage& imageToAlign, int startDepth);
 
 	CLImage& GetCompareCLImageFullSize() { return mCmpImgDsStack.GetCLImageAtDepthLevel(0); };
 	CLImage& GetCompareCLImageDeepest() { return mCmpImgDsStack.GetCLImageAtDepthLevel(mCmpImgDsStack.GetNumDepthLevels() - 1); };

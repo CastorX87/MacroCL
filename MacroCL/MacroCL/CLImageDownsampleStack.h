@@ -25,7 +25,7 @@ public:
 	~CLImageDownsampleStack();
 
 	void SetBaseCLImage(unique_ptr<CLImage> toplevelImage);
-	void UpdateDownsampledCLImages(cl_int2 minSizes, int maxDepthLevel); // Create new (when there are no downsampled images), update (when all sizes are ok) or delete and create new (when sizes do not pass)
+	void UpdateDownsampledCLImages(cl_int2 minSizes, int maxDepthLevel, int startAt); // Create new (when there are no downsampled images), update (when all sizes are ok) or delete and create new (when sizes do not pass)
 
 	CLImage& GetCLImageAtDepthLevel(int depthLevel);
 	const CLImage& GetCLImageAtDepthLevel(int depthLevel) const;

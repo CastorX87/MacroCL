@@ -48,13 +48,13 @@ const CLImage& CLImageDownsampleStack::GetCLImageAtDepthLevel(int depthLevel) co
 	return *mCLImageStack[depthLevel];
 }
 
-void CLImageDownsampleStack::UpdateDownsampledCLImages(cl_int2 minSizes, int maxDepthLevel)
+void CLImageDownsampleStack::UpdateDownsampledCLImages(cl_int2 minSizes, int maxDepthLevel, int startAt)
 {
 	Util::PrintLogLineDebug(wstring(L"[*] Updating/creating downsampled images in DSStack '") + mName + L"'");
 
-	int lastUsedDepthLevel = 0;
+	int lastUsedDepthLevel = startAt;
 	// Go through all levels
-	for (int i = 1; i < maxDepthLevel; i++)
+	for (int i = startAt + 1; i < maxDepthLevel; i++)
 	{
 		cl_int2 dsSize = CalcSizeAtDepthLevel(mCLImageStack[0]->GetSize(), i);
 		if (dsSize.x < minSizes.x || dsSize.y < minSizes.y)

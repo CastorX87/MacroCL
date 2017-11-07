@@ -13,7 +13,7 @@ CLImageComparator::CLImageComparator(wstring name, cl_context context, cl_device
 	mMinSizeDownsample = minSizeDownsample;
 	mMaxDepthDownsample = maxDepthDownsample;
 	mCmpImgDsStack.SetBaseCLImage(unique_ptr<CLImage>(new CLImage(mContext, L"Image comparator result", workBufferSize.x, workBufferSize.y, 0, CL_MEM_READ_WRITE, CL_RGBA, CL_UNORM_INT8)));
-	mCmpImgDsStack.UpdateDownsampledCLImages(mMinSizeDownsample, mMaxDepthDownsample);
+	mCmpImgDsStack.UpdateDownsampledCLImages(mMinSizeDownsample, mMaxDepthDownsample, 0);
 	mCmpImgPixelBuffer.resize(workBufferSize.x * workBufferSize.y);
 	CLHelp::LoadProgram(context, device, L"Compare.cl", mCMProgram);
 	CLHelp::CreateKernel(mCMProgram, L"CompareMain", mCMKernel);
@@ -23,7 +23,7 @@ CLImageComparator::~CLImageComparator()
 {
 }
 
-float CLImageComparator::CompareCLImages(CLUtil::MMAligmentData al, CLImage& imageBase, CLImage& imageToAlign)
+float CLImageComparator::CompareCLImages(CLUtil::MMAligmentData al, CLImage& imageBase, CLImage& imageToAlign, int startDepth)
 {
 	float avgDiff = 0;
 	
@@ -40,12 +40,12 @@ float CLImageComparator::CompareCLImages(CLUtil::MMAligmentData al, CLImage& ima
 	cl_int2 inputSize = imageBase.GetSizeEven();
 	cl_float2 imgASize{ imageBase.GetSizeX(), imageBase.GetSizeY() };
 	cl_float2 imgBSize{ imageToAlign.GetSizeX(), imageToAlign.GetSizeY() };
-	cl_float2 imgWSize{ mCmpImgDsStack.GetCLImageAtDepthLevel(0).GetSizeX(), mCmpImgDsStack.GetCLImageAtDepthLevel(0).GetSizeY() };
+	cl_float2 imgWSize{ mCmpImgDsStack.GetCLImageAtDepthLevel(startDepth).GetSizeX(), mCmpImgDsStack.GetCLImageAtDepthLevel(startDepth).GetSizeY() };
 
 	CLUtil::RoundUpToWGSize(imageBase.GetSizeX(), imageBase.GetSizeY(), lSize[0], lSize[1], gSize[0], gSize[1]);
 	clSetKernelArg(mCMKernel, 0, sizeof(cl_mem), (void *)&imageBase.getMemObject());
 	clSetKernelArg(mCMKernel, 1, sizeof(cl_mem), (void *)&imageToAlign.getMemObject());
-	clSetKernelArg(mCMKernel, 2, sizeof(cl_mem), (void *)&mCmpImgDsStack.GetCLImageAtDepthLevel(0).getMemObject());
+	clSetKernelArg(mCMKernel, 2, sizeof(cl_mem), (void *)&mCmpImgDsStack.GetCLImageAtDepthLevel(startDepth).getMemObject());
 	clSetKernelArg(mCMKernel, 3, sizeof(cl_float2), (void *)&imgASize);
 	clSetKernelArg(mCMKernel, 4, sizeof(cl_float2), (void *)&imgBSize);
 	clSetKernelArg(mCMKernel, 5, sizeof(cl_float2), (void *)&imgWSize);
@@ -54,7 +54,7 @@ float CLImageComparator::CompareCLImages(CLUtil::MMAligmentData al, CLImage& ima
 	clEnqueueNDRangeKernel(mCommandQueue, mCMKernel, 2, NULL, gSize, lSize, 0, NULL, NULL);
 	clFinish(mCommandQueue);
 
-	mCmpImgDsStack.UpdateDownsampledCLImages(mMinSizeDownsample, mMaxDepthDownsample);
+	mCmpImgDsStack.UpdateDownsampledCLImages(mMinSizeDownsample, mMaxDepthDownsample, startDepth);
 
 	CLImage& clImageToRead = this->GetCompareCLImageDeepest();
 	cl_int2 cmpImgSize = clImageToRead.GetSize();
@@ -73,7 +73,7 @@ float CLImageComparator::CompareCLImages(CLUtil::MMAligmentData al, CLImage& ima
 			if ((pixel >> 24) != 0x00)
 			{
 				DELTA_PIXELS++;
-				DELTA += (pixel & 0x00FF0000 >> 16) + (pixel & 0x0000FF00 >> 8) + pixel & 0x000000FF;
+				DELTA += max(max((pixel & 0x00FF0000 >> 16), (pixel & 0x0000FF00 >> 8)), pixel & 0x000000FF);
 			}
 		}
 	}
