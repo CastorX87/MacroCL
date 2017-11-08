@@ -41,7 +41,7 @@ MMAligmentData BestAlignmentDirRotate(CLImageComparator& comparator, CLImage& im
 	MMAligmentData bestAlignment = startAlignment;
 	float bestScore = startScore;
 
-	for (float r = -5; r <= 5; r += 0.5f)
+	for (float r = -4; r <= 4; r += 0.5f)
 	{
 		testAlignment.rotate = startAlignment.rotate + r;
 		float v = comparator.CompareCLImages(testAlignment, imageBase, imageToAlign, dsLevel);
@@ -158,8 +158,8 @@ int main()
 
 	CLHelp::InitOpenCL(clContext, clCommandQueue, clDevice);
 
-	unique_ptr<CLImage> fullCLImageA = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\D1.jpg", CL_MEM_READ_WRITE);
-	unique_ptr<CLImage> fullCLImageB = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\D2.jpg", CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullCLImageA = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\F1.jpg", CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullCLImageB = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\F2.jpg", CL_MEM_READ_WRITE);
 
 	CLImageDownsampleStack stackCLImageA(L"ImgA DS", clContext, clDevice, clCommandQueue);
 	CLImageDownsampleStack stackCLImageB(L"ImgB DS", clContext, clDevice, clCommandQueue);
@@ -167,10 +167,10 @@ int main()
 	stackCLImageA.SetBaseCLImage(std::move(fullCLImageA));
 	stackCLImageB.SetBaseCLImage(std::move(fullCLImageB));
 
-	stackCLImageA.UpdateDownsampledCLImages(cl_int2{ 32, 32 }, 10, 0);
-	stackCLImageB.UpdateDownsampledCLImages(cl_int2{ 32, 32 }, 10, 0);
+	stackCLImageA.UpdateDownsampledCLImages(cl_int2{ 16, 16 }, 10, 0);
+	stackCLImageB.UpdateDownsampledCLImages(cl_int2{ 16, 16 }, 10, 0);
 
-	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, stackCLImageA.GetCLImageAtDepthLevel(0).GetSize(), cl_int2{ 32, 32 }, 10);
+	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, stackCLImageA.GetCLImageAtDepthLevel(0).GetSize(), cl_int2{ 16, 16 }, 10);
 	float r = 0;
 	float s = 1;
 	int x = 0;
@@ -208,7 +208,10 @@ int main()
 					alignment.translation.x = 0;
 					alignment.translation.y = 0;
 					float score = 0;
+					sf::Clock clock;
 					alignment = FindBestAlignment(comparator, stackCLImageA, stackCLImageB, alignment, score);
+
+					Util::PrintLogLine(wstring(L"time=") + to_wstring(clock.getElapsedTime().asMilliseconds()));
 					Util::PrintLogLine(wstring(L"alignment=") + alignment.ToString() + L" score=" + to_wstring(score));
 					Util::PrintLogLine(L"");
 				}
