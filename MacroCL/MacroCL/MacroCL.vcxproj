@@ -154,6 +154,7 @@
     <ClInclude Include="CLImageComparator.h" />
     <ClInclude Include="CLImageDownsampler.h" />
     <ClInclude Include="CLImageDownsampleStack.h" />
+    <ClInclude Include="CLImageSharpnessCalc.h" />
     <ClInclude Include="CLUtility.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="stdafx.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="CLImageComparator.cpp" />
     <ClCompile Include="CLImageDownsampler.cpp" />
     <ClCompile Include="CLImageDownsampleStack.cpp" />
+    <ClCompile Include="CLImageSharpnessCalc.cpp" />
     <ClCompile Include="MacroCL.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -176,6 +178,7 @@
   <ItemGroup>
     <None Include="Downsample.cl" />
     <None Include="Compare.cl" />
+    <None Include="Sharpness.cl" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Concept.txt" />

@@ -4,6 +4,7 @@
 #include "CLImageDownsampler.h"
 #include "CLImageDownsampleStack.h"
 #include "CLImageComparator.h"
+#include "CLImageSharpnessCalc.h"
 
 using namespace std;
 using namespace sf;
@@ -158,17 +159,22 @@ int main()
 
 	CLHelp::InitOpenCL(clContext, clCommandQueue, clDevice);
 
-	unique_ptr<CLImage> fullCLImageA = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\F1.jpg", CL_MEM_READ_WRITE);
-	unique_ptr<CLImage> fullCLImageB = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\F2.jpg", CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullA = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\A2.jpg", CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullB = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\A1.jpg", CL_MEM_READ_WRITE);
+
+	unique_ptr<CLImage> sharpnessA = unique_ptr<CLImage>(new CLImage(clContext, L"Sharpness map of ImageA", fullA->GetSizeX(), fullA->GetSizeY(), 0, CL_MEM_READ_WRITE, fullA->getFormat().image_channel_order, fullA->getFormat().image_channel_data_type, nullptr));
+	CLImageSharpnessCalc sharpnessCalc(L"Sharpness calculator", clContext, clDevice, clCommandQueue);
+
 
 	CLImageDownsampleStack stackCLImageA(L"ImgA DS", clContext, clDevice, clCommandQueue);
 	CLImageDownsampleStack stackCLImageB(L"ImgB DS", clContext, clDevice, clCommandQueue);
 
-	stackCLImageA.SetBaseCLImage(std::move(fullCLImageA));
-	stackCLImageB.SetBaseCLImage(std::move(fullCLImageB));
+	stackCLImageA.SetBaseCLImage(std::move(fullA));
+	stackCLImageB.SetBaseCLImage(std::move(fullB));
 
 	stackCLImageA.UpdateDownsampledCLImages(cl_int2{ 16, 16 }, 10, 0);
 	stackCLImageB.UpdateDownsampledCLImages(cl_int2{ 16, 16 }, 10, 0);
+
 
 	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, stackCLImageA.GetCLImageAtDepthLevel(0).GetSize(), cl_int2{ 16, 16 }, 10);
 	float r = 0;
@@ -186,6 +192,11 @@ int main()
 			{
 				mainWindow.close();
 			}
+			if (event.type == sf::Event::MouseMoved)
+			{
+				x = event.mouseMove.x;
+				y = event.mouseMove.y;
+			}
 			if (event.type == sf::Event::MouseWheelMoved)
 			{
 				float score = comparator.CompareCLImages(alignment, stackCLImageA.GetCLImageAtDepthLevel(0), stackCLImageB.GetCLImageAtDepthLevel(0), 0);
@@ -200,6 +211,14 @@ int main()
 				if (event.key.code == sf::Keyboard::Key::LControl)
 				{
 					controlPressed = true;
+				}
+				if (event.key.code == sf::Keyboard::Key::S)
+				{
+					mainWindow.clear(sf::Color(100, 100, 100, 255));
+					sharpnessCalc.CalcSharpness(stackCLImageA.GetCLImageAtDepthLevel(0), *sharpnessA, x / 10);
+
+					Show(*sharpnessA);
+					mainWindow.display();
 				}
 				if (event.key.code == sf::Keyboard::Key::Space)
 				{
