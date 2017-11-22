@@ -13,6 +13,49 @@ const cl_int2 MainWindowSize{ 1280, 900 };
 
 RenderWindow mainWindow;
 
+vector<wstring> files{
+	L"C:\\Resized\\DSC06166.jpeg",
+	L"C:\\Resized\\DSC06167.jpeg",
+	L"C:\\Resized\\DSC06168.jpeg",
+	L"C:\\Resized\\DSC06169.jpeg",
+	L"C:\\Resized\\DSC06170.jpeg",
+	L"C:\\Resized\\DSC06171.jpeg",
+	L"C:\\Resized\\DSC06172.jpeg",
+	L"C:\\Resized\\DSC06173.jpeg",
+	L"C:\\Resized\\DSC06174.jpeg",
+	L"C:\\Resized\\DSC06175.jpeg",
+	L"C:\\Resized\\DSC06176.jpeg",
+	L"C:\\Resized\\DSC06177.jpeg",
+	L"C:\\Resized\\DSC06178.jpeg",
+	L"C:\\Resized\\DSC06179.jpeg",
+	L"C:\\Resized\\DSC06180.jpeg",
+	L"C:\\Resized\\DSC06181.jpeg",
+	L"C:\\Resized\\DSC06182.jpeg",
+	L"C:\\Resized\\DSC06183.jpeg",
+	L"C:\\Resized\\DSC06184.jpeg",
+	L"C:\\Resized\\DSC06185.jpeg",
+	L"C:\\Resized\\DSC06186.jpeg",
+	L"C:\\Resized\\DSC06187.jpeg",
+	L"C:\\Resized\\DSC06188.jpeg",
+	L"C:\\Resized\\DSC06189.jpeg",
+	L"C:\\Resized\\DSC06190.jpeg",
+	L"C:\\Resized\\DSC06191.jpeg",
+	L"C:\\Resized\\DSC06192.jpeg",
+	L"C:\\Resized\\DSC06193.jpeg",
+	L"C:\\Resized\\DSC06194.jpeg",
+	L"C:\\Resized\\DSC06195.jpeg",
+	L"C:\\Resized\\DSC06196.jpeg",
+	L"C:\\Resized\\DSC06197.jpeg",
+	L"C:\\Resized\\DSC06198.jpeg",
+	L"C:\\Resized\\DSC06199.jpeg",
+	L"C:\\Resized\\DSC06200.jpeg",
+	L"C:\\Resized\\DSC06201.jpeg",
+	L"C:\\Resized\\DSC06202.jpeg",
+	L"C:\\Resized\\DSC06203.jpeg"
+};
+
+vector<unique_ptr<SFImage>> sfImagesAll;
+
 cl_context clContext;
 cl_command_queue clCommandQueue;
 cl_device_id clDevice;
@@ -34,7 +77,6 @@ void Show(CLImage& clImage)
 	sprite.setScale(scale, scale);
 	mainWindow.draw(sprite);
 }
-
 
 MMAligmentData BestAlignmentDirRotate(CLImageComparator& comparator, CLImage& imageBase, CLImage& imageToAlign, MMAligmentData& startAlignment, float startScore, float& score, int dsLevel)
 {
@@ -151,6 +193,25 @@ MMAligmentData FindBestAlignment(CLImageComparator& comparator, CLImageDownsampl
 	return currAlignment;
 }
 
+std::vector<sf::Color> DEBUG_PIXELS_AT_POSITION;
+void GetPixelsOfImages(int x, int y, std::vector<std::unique_ptr<SFImage>>& images, std::vector<sf::Color>& pixels)
+{
+	if (pixels.size() != images.size())
+		pixels.resize(images.size());
+	
+	
+	int n = 0;
+	for (auto& imgPtr : images)
+	{
+		x = fmax(fmin(imgPtr->getSize().x - 1, x), 0);
+		y = fmax(fmin(imgPtr->getSize().y - 1, y), 0);
+
+		sf::Color color = imgPtr->getPixel(x, y);
+		pixels[n] = color;
+		n++;
+	}
+}
+
 int main()
 {
 	// Create SFML window
@@ -159,8 +220,8 @@ int main()
 
 	CLHelp::InitOpenCL(clContext, clCommandQueue, clDevice);
 
-	unique_ptr<CLImage> fullA = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\A2.jpg", CL_MEM_READ_WRITE);
-	unique_ptr<CLImage> fullB = CLHelp::CLImageFromFile(clContext, L"C:\\Users\\Castor\\Pictures\\A1.jpg", CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullA = CLHelp::CLImageFromFile(clContext, files[0], CL_MEM_READ_WRITE);
+	unique_ptr<CLImage> fullB = CLHelp::CLImageFromFile(clContext, files[1], CL_MEM_READ_WRITE);
 
 	unique_ptr<CLImage> sharpnessA = unique_ptr<CLImage>(new CLImage(clContext, L"Sharpness map of ImageA", fullA->GetSizeX(), fullA->GetSizeY(), 0, CL_MEM_READ_WRITE, fullA->getFormat().image_channel_order, fullA->getFormat().image_channel_data_type, nullptr));
 	CLImageSharpnessCalc sharpnessCalc(L"Sharpness calculator", clContext, clDevice, clCommandQueue);
@@ -175,8 +236,18 @@ int main()
 	stackCLImageA.UpdateDownsampledCLImages(cl_int2{ 16, 16 }, 10, 0);
 	stackCLImageB.UpdateDownsampledCLImages(cl_int2{ 16, 16 }, 10, 0);
 
-
 	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, stackCLImageA.GetCLImageAtDepthLevel(0).GetSize(), cl_int2{ 16, 16 }, 10);
+
+	// ---------------- DEBUG ---------------- //
+	for (auto& file : files)
+	{
+		Util::PrintLogLine(wstring(L"Loading image ") + file);
+		sfImagesAll.push_back(unique_ptr<SFImage>(new SFImage()));
+		sfImagesAll.back()->loadFromFile(Util::WStrToStr(file));
+	}
+	// --------------------------------------- //
+
+
 	float r = 0;
 	float s = 1;
 	int x = 0;
@@ -196,6 +267,24 @@ int main()
 			{
 				x = event.mouseMove.x;
 				y = event.mouseMove.y;
+
+				// ---------------- DEBUG ---------------- //
+				GetPixelsOfImages(x, y, sfImagesAll, DEBUG_PIXELS_AT_POSITION);
+				vector<sf::Vertex> lineVertices;
+				for(int i = 0; i < DEBUG_PIXELS_AT_POSITION.size() - 1; i++)
+				{
+					auto& pixValueA = DEBUG_PIXELS_AT_POSITION[i];
+					auto& pixValueB = DEBUG_PIXELS_AT_POSITION[i + 1];
+					int a = (pixValueA.r + pixValueA.g + pixValueA.b) / 3;
+					int b = (pixValueB.r + pixValueB.g + pixValueB.b) / 3;
+					lineVertices.push_back(sf::Vertex(sf::Vector2f(i * 10, 256 - (float)a)));
+					lineVertices.push_back(sf::Vertex(sf::Vector2f((i + 1) * 10, 256 - (float)b)));
+				}
+				mainWindow.clear(sf::Color(100, 100, 100, 255));
+				Show(comparator.GetCompareCLImageAtDepth(0));
+				mainWindow.draw(lineVertices.data(), lineVertices.size(), sf::Lines);
+				mainWindow.display();
+				// --------------------------------------- //
 			}
 			if (event.type == sf::Event::MouseWheelMoved)
 			{

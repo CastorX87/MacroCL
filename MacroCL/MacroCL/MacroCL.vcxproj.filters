@@ -45,6 +45,9 @@
     <ClInclude Include="CLImageSharpnessCalc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CLWeightCalculator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -71,6 +74,9 @@
     <ClCompile Include="CLImageSharpnessCalc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CLWeightCalculator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Downsample.cl">
@@ -80,6 +86,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Sharpness.cl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="WeightCalc.cl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

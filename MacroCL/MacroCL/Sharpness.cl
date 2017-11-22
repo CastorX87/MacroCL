@@ -56,7 +56,10 @@ __kernel void SharpnessMain(
 		}
 	}
 	others = others / (float)n;
-	float4 sharpness = fabs(center - others);
-	sharpness.w = 1;
+	float4 sharpness = fabs(center - others) * 10;
+	sharpness.x = fmax(sharpness.x, sharpness.y);
+	sharpness.x = fmax(sharpness.x, sharpness.z);
+	sharpness = (float4)(sharpness.x, sharpness.x, sharpness.x, 1);
+	
 	SetDataF4Img(sharpness, gPos, outputImage);
 }
