@@ -5,6 +5,7 @@
 #include "CLImageDownsampleStack.h"
 #include "CLImageComparator.h"
 #include "CLImageSharpnessCalc.h"
+#include "CLWeightCalculator.h"
 
 using namespace std;
 using namespace sf;
@@ -13,45 +14,81 @@ const cl_int2 MainWindowSize{ 1280, 900 };
 
 RenderWindow mainWindow;
 
-vector<wstring> files{
-	L"C:\\Resized\\DSC06166.jpeg",
-	L"C:\\Resized\\DSC06167.jpeg",
-	L"C:\\Resized\\DSC06168.jpeg",
-	L"C:\\Resized\\DSC06169.jpeg",
-	L"C:\\Resized\\DSC06170.jpeg",
-	L"C:\\Resized\\DSC06171.jpeg",
-	L"C:\\Resized\\DSC06172.jpeg",
-	L"C:\\Resized\\DSC06173.jpeg",
-	L"C:\\Resized\\DSC06174.jpeg",
-	L"C:\\Resized\\DSC06175.jpeg",
-	L"C:\\Resized\\DSC06176.jpeg",
-	L"C:\\Resized\\DSC06177.jpeg",
-	L"C:\\Resized\\DSC06178.jpeg",
-	L"C:\\Resized\\DSC06179.jpeg",
-	L"C:\\Resized\\DSC06180.jpeg",
-	L"C:\\Resized\\DSC06181.jpeg",
-	L"C:\\Resized\\DSC06182.jpeg",
-	L"C:\\Resized\\DSC06183.jpeg",
-	L"C:\\Resized\\DSC06184.jpeg",
-	L"C:\\Resized\\DSC06185.jpeg",
-	L"C:\\Resized\\DSC06186.jpeg",
-	L"C:\\Resized\\DSC06187.jpeg",
-	L"C:\\Resized\\DSC06188.jpeg",
-	L"C:\\Resized\\DSC06189.jpeg",
-	L"C:\\Resized\\DSC06190.jpeg",
-	L"C:\\Resized\\DSC06191.jpeg",
-	L"C:\\Resized\\DSC06192.jpeg",
-	L"C:\\Resized\\DSC06193.jpeg",
-	L"C:\\Resized\\DSC06194.jpeg",
-	L"C:\\Resized\\DSC06195.jpeg",
-	L"C:\\Resized\\DSC06196.jpeg",
-	L"C:\\Resized\\DSC06197.jpeg",
-	L"C:\\Resized\\DSC06198.jpeg",
-	L"C:\\Resized\\DSC06199.jpeg",
-	L"C:\\Resized\\DSC06200.jpeg",
-	L"C:\\Resized\\DSC06201.jpeg",
-	L"C:\\Resized\\DSC06202.jpeg",
-	L"C:\\Resized\\DSC06203.jpeg"
+vector<wstring> filesA{
+	L"C:\\Resized\\A (1).jpeg",
+	L"C:\\Resized\\A (2).jpeg",
+	L"C:\\Resized\\A (3).jpeg",
+	L"C:\\Resized\\A (4).jpeg",
+	L"C:\\Resized\\A (5).jpeg",
+	L"C:\\Resized\\A (6).jpeg",
+	L"C:\\Resized\\A (7).jpeg",
+	L"C:\\Resized\\A (8).jpeg",
+	L"C:\\Resized\\A (9).jpeg",
+	L"C:\\Resized\\A (10).jpeg",
+	L"C:\\Resized\\A (11).jpeg",
+	L"C:\\Resized\\A (12).jpeg",
+	L"C:\\Resized\\A (13).jpeg",
+	L"C:\\Resized\\A (14).jpeg",
+	L"C:\\Resized\\A (15).jpeg",
+	L"C:\\Resized\\A (16).jpeg",
+	L"C:\\Resized\\A (17).jpeg",
+	L"C:\\Resized\\A (18).jpeg",
+	L"C:\\Resized\\A (19).jpeg",
+	L"C:\\Resized\\A (20).jpeg",
+	L"C:\\Resized\\A (21).jpeg",
+	L"C:\\Resized\\A (22).jpeg",
+	L"C:\\Resized\\A (23).jpeg",
+	L"C:\\Resized\\A (24).jpeg",
+	L"C:\\Resized\\A (25).jpeg",
+	L"C:\\Resized\\A (26).jpeg",
+	L"C:\\Resized\\A (27).jpeg",
+	L"C:\\Resized\\A (28).jpeg",
+	L"C:\\Resized\\A (29).jpeg",
+	L"C:\\Resized\\A (30).jpeg",
+	L"C:\\Resized\\A (31).jpeg",
+	L"C:\\Resized\\A (32).jpeg",
+	L"C:\\Resized\\A (33).jpeg",
+};
+
+vector<wstring> filesB{
+	L"C:\\Resized\\B (1).jpeg",
+	L"C:\\Resized\\B (2).jpeg",
+	L"C:\\Resized\\B (3).jpeg",
+	L"C:\\Resized\\B (4).jpeg",
+	L"C:\\Resized\\B (5).jpeg",
+	L"C:\\Resized\\B (6).jpeg",
+	L"C:\\Resized\\B (7).jpeg",
+	L"C:\\Resized\\B (8).jpeg",
+	L"C:\\Resized\\B (9).jpeg",
+	L"C:\\Resized\\B (10).jpeg",
+	L"C:\\Resized\\B (11).jpeg",
+	L"C:\\Resized\\B (12).jpeg",
+	L"C:\\Resized\\B (13).jpeg",
+	L"C:\\Resized\\B (14).jpeg",
+	L"C:\\Resized\\B (15).jpeg",
+	L"C:\\Resized\\B (16).jpeg",
+	L"C:\\Resized\\B (17).jpeg",
+	L"C:\\Resized\\B (18).jpeg",
+	L"C:\\Resized\\B (19).jpeg",
+	L"C:\\Resized\\B (20).jpeg",
+	L"C:\\Resized\\B (21).jpeg",
+	L"C:\\Resized\\B (22).jpeg",
+	L"C:\\Resized\\B (23).jpeg",
+	L"C:\\Resized\\B (24).jpeg",
+	L"C:\\Resized\\B (25).jpeg",
+	L"C:\\Resized\\B (26).jpeg",
+	L"C:\\Resized\\B (27).jpeg",
+	L"C:\\Resized\\B (28).jpeg",
+	L"C:\\Resized\\B (29).jpeg",
+	L"C:\\Resized\\B (30).jpeg",
+	L"C:\\Resized\\B (31).jpeg",
+	L"C:\\Resized\\B (32).jpeg",
+	L"C:\\Resized\\B (33).jpeg",
+	L"C:\\Resized\\B (34).jpeg",
+	L"C:\\Resized\\B (35).jpeg",
+	L"C:\\Resized\\B (36).jpeg",
+	L"C:\\Resized\\B (37).jpeg",
+	L"C:\\Resized\\B (38).jpeg"
 };
 
 vector<unique_ptr<SFImage>> sfImagesAll;
@@ -194,11 +231,12 @@ MMAligmentData FindBestAlignment(CLImageComparator& comparator, CLImageDownsampl
 }
 
 std::vector<sf::Color> DEBUG_PIXELS_AT_POSITION;
+std::vector<sf::Color> DEBUG_CONTRASTS_AT_POSITION;
+
 void GetPixelsOfImages(int x, int y, std::vector<std::unique_ptr<SFImage>>& images, std::vector<sf::Color>& pixels)
 {
 	if (pixels.size() != images.size())
 		pixels.resize(images.size());
-	
 	
 	int n = 0;
 	for (auto& imgPtr : images)
@@ -212,6 +250,41 @@ void GetPixelsOfImages(int x, int y, std::vector<std::unique_ptr<SFImage>>& imag
 	}
 }
 
+int CalcLum(sf::Color color)
+{
+	return (int)(0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b);
+}
+
+void GetContastsOfImages(int x, int y, std::vector<std::unique_ptr<SFImage>>& images, std::vector<sf::Color>& pixels)
+{
+	if (pixels.size() != images.size())
+		pixels.resize(images.size());
+
+	int n = 0;
+	for (auto& imgPtr : images)
+	{
+		x = fmax(fmin(imgPtr->getSize().x - 1, x), 0);
+		y = fmax(fmin(imgPtr->getSize().y - 1, y), 0);
+
+		int centerLum = CalcLum(imgPtr->getPixel(x, y));
+		int totalLum = 0;
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			for (int dy = -1; dy <= 1; dy++)
+			{
+				if (dx == 0 && dy == 0)
+					continue;
+				int lX = fmax(fmin(imgPtr->getSize().x - 1, x + dx), 0);
+				int lY = fmax(fmin(imgPtr->getSize().y - 1, y + dy), 0);
+				totalLum += CalcLum(imgPtr->getPixel(lX, lY));
+			}
+		}
+		int diff = (int)(fabsf(centerLum - totalLum / 8.0f));
+		pixels[n] = sf::Color(diff, diff, diff, 255);
+		n++;
+	}
+}
+
 int main()
 {
 	// Create SFML window
@@ -220,12 +293,16 @@ int main()
 
 	CLHelp::InitOpenCL(clContext, clCommandQueue, clDevice);
 
+	auto& files = filesB;
+
 	unique_ptr<CLImage> fullA = CLHelp::CLImageFromFile(clContext, files[0], CL_MEM_READ_WRITE);
 	unique_ptr<CLImage> fullB = CLHelp::CLImageFromFile(clContext, files[1], CL_MEM_READ_WRITE);
 
 	unique_ptr<CLImage> sharpnessA = unique_ptr<CLImage>(new CLImage(clContext, L"Sharpness map of ImageA", fullA->GetSizeX(), fullA->GetSizeY(), 0, CL_MEM_READ_WRITE, fullA->getFormat().image_channel_order, fullA->getFormat().image_channel_data_type, nullptr));
+	unique_ptr<CLImage> tmpFinalImg = unique_ptr<CLImage>(new CLImage(clContext, L"TempSharpImage", fullA->GetSizeX(), fullA->GetSizeY(), 0, CL_MEM_READ_WRITE, fullA->getFormat().image_channel_order, fullA->getFormat().image_channel_data_type, nullptr));
 	CLImageSharpnessCalc sharpnessCalc(L"Sharpness calculator", clContext, clDevice, clCommandQueue);
 
+	CLWeightCalculator weightCalc(L"Weight calculator", clContext, clDevice, clCommandQueue, files.size());
 
 	CLImageDownsampleStack stackCLImageA(L"ImgA DS", clContext, clDevice, clCommandQueue);
 	CLImageDownsampleStack stackCLImageB(L"ImgB DS", clContext, clDevice, clCommandQueue);
@@ -238,12 +315,19 @@ int main()
 
 	CLImageComparator comparator(L"Comparator", clContext, clDevice, clCommandQueue, stackCLImageA.GetCLImageAtDepthLevel(0).GetSize(), cl_int2{ 16, 16 }, 10);
 
+	vector<unique_ptr<CLImage>> allClImages;
+	vector<MMAligmentData> allAlignments;
+	vector<float> allWeights;
 	// ---------------- DEBUG ---------------- //
 	for (auto& file : files)
 	{
 		Util::PrintLogLine(wstring(L"Loading image ") + file);
 		sfImagesAll.push_back(unique_ptr<SFImage>(new SFImage()));
 		sfImagesAll.back()->loadFromFile(Util::WStrToStr(file));
+
+		allClImages.push_back(std::move(CLHelp::CLImageFromFile(clContext, file, CL_MEM_READ_ONLY)));
+		allAlignments.push_back(MMAligmentData()); // Use default alignemnt for the tests!
+		allWeights.push_back(0.0f);
 	}
 	// --------------------------------------- //
 
@@ -277,12 +361,25 @@ int main()
 					auto& pixValueB = DEBUG_PIXELS_AT_POSITION[i + 1];
 					int a = (pixValueA.r + pixValueA.g + pixValueA.b) / 3;
 					int b = (pixValueB.r + pixValueB.g + pixValueB.b) / 3;
-					lineVertices.push_back(sf::Vertex(sf::Vector2f(i * 10, 256 - (float)a)));
-					lineVertices.push_back(sf::Vertex(sf::Vector2f((i + 1) * 10, 256 - (float)b)));
+					lineVertices.push_back(sf::Vertex(sf::Vector2f(i * 10, 256 - (float)a), sf::Color(200, 250, 250, 255)));
+					lineVertices.push_back(sf::Vertex(sf::Vector2f((i + 1) * 10, 256 - (float)b), sf::Color(200, 250, 250, 255)));
+				}
+
+				GetContastsOfImages(x, y, sfImagesAll, DEBUG_CONTRASTS_AT_POSITION);
+				vector<sf::Vertex> lineVertices2;
+				for (int i = 0; i < DEBUG_CONTRASTS_AT_POSITION.size() - 1; i++)
+				{
+					auto& pixValueA = DEBUG_CONTRASTS_AT_POSITION[i];
+					auto& pixValueB = DEBUG_CONTRASTS_AT_POSITION[i + 1];
+					int a = (pixValueA.r + pixValueA.g + pixValueA.b) / 3;
+					int b = (pixValueB.r + pixValueB.g + pixValueB.b) / 3;
+					lineVertices2.push_back(sf::Vertex(sf::Vector2f(i * 10, 256 - (float)a), sf::Color(200, 150, 100, 255)));
+					lineVertices2.push_back(sf::Vertex(sf::Vector2f((i + 1) * 10, 256 - (float)b), sf::Color(200, 150, 100, 255)));
 				}
 				mainWindow.clear(sf::Color(100, 100, 100, 255));
-				Show(comparator.GetCompareCLImageAtDepth(0));
+				Show(*tmpFinalImg);
 				mainWindow.draw(lineVertices.data(), lineVertices.size(), sf::Lines);
+				mainWindow.draw(lineVertices2.data(), lineVertices2.size(), sf::Lines);
 				mainWindow.display();
 				// --------------------------------------- //
 			}
@@ -300,6 +397,13 @@ int main()
 				if (event.key.code == sf::Keyboard::Key::LControl)
 				{
 					controlPressed = true;
+				}
+				if (event.key.code == sf::Keyboard::Key::W)
+				{
+					mainWindow.clear(sf::Color(255, 50, 50, 255));
+					weightCalc.CalcWeights(allClImages, allAlignments, allWeights, *tmpFinalImg);
+					Show(*tmpFinalImg);
+					mainWindow.display();
 				}
 				if (event.key.code == sf::Keyboard::Key::S)
 				{

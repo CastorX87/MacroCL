@@ -26,14 +26,9 @@ CLImageComparator::~CLImageComparator()
 float CLImageComparator::CompareCLImages(CLUtil::MMAligmentData al, CLImage& imageBase, CLImage& imageToAlign, int startDepth)
 {
 	float avgDiff = 0;
-	
-	//cl_float4 matRotation{ cosf(al.rotate / 57.3) / al.scale, -sinf(al.rotate / 57.3) / al.scale,
-	//											 sinf(al.rotate / 57.3) / al.scale,  cosf(al.rotate / 57.3) / al.scale };
-	cl_float4 matRotation{
-		cosf(al.rotate / 57.3) / al.scale, -sinf(al.rotate / 57.3) / al.scale,
-		sinf(al.rotate / 57.3) / al.scale,  cosf(al.rotate / 57.3) / al.scale };
-
-	cl_float2 vecTranslation{ -al.translation.x, -al.translation.y };
+	cl_float4 matRotation;
+	cl_float2 vecTranslation;
+	al.ToRotAndTransInverse(matRotation, vecTranslation);
 
 	size_t gSize[2];
 	size_t lSize[2]{ 16, 16 };

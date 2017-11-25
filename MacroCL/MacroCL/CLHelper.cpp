@@ -62,10 +62,22 @@ void CLHelp::InitOpenCL(cl_context& contextOut, cl_command_queue& commandQueueOu
 	SafeDeleteArray(devices);
 }
 
-void CLHelp::LoadProgram(cl_context clContext, cl_device_id clDevice, const std::wstring sourceFilePath, cl_program& programOut)
+void CLHelp::LoadProgram(cl_context clContext, cl_device_id clDevice, const std::wstring sourceFilePath, cl_program& programOut, std::vector<std::tuple<std::string, std::string>>* repDict)
 {
 	cl_int clErrorCode;
 	std::string src = Util::WStrToStr(Util::ReadWholeFile(sourceFilePath));
+
+	if (repDict != nullptr)
+	{
+		for (auto& rpData : *repDict)
+		{
+			Util::ReplaceStringInPlace(src, std::get<0>(rpData), std::get<1>(rpData));
+		}
+		std::ofstream fstr("C:\\Programming\\preprocessed.cl");
+		fstr << src;
+		fstr.close();
+	}
+
 	const char* scrPtr = src.c_str();
 	size_t clKernelSize = src.length();
 	programOut = clCreateProgramWithSource(clContext, 1, (const char **)&(scrPtr), &clKernelSize, &clErrorCode);

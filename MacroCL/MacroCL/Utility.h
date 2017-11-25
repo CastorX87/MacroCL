@@ -32,6 +32,25 @@ namespace Util
 		NonCopyable& operator=(const NonCopyable&) = delete;
 	};
 
+	static std::string ReplaceString(std::string subject, const std::string& search, const std::string& replace)
+	{
+		size_t pos = 0;
+		while ((pos = subject.find(search, pos)) != std::string::npos) {
+			subject.replace(pos, search.length(), replace);
+			pos += replace.length();
+		}
+		return subject;
+	}
+
+	static void ReplaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace)
+	{
+		size_t pos = 0;
+		while ((pos = subject.find(search, pos)) != std::string::npos) {
+			subject.replace(pos, search.length(), replace);
+			pos += replace.length();
+		}
+	}
+
 	static std::wstring StrToWStr(const std::string& str)
 	{
 		using convert_typeX = std::codecvt_utf8<wchar_t>;

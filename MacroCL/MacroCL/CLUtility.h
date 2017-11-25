@@ -45,6 +45,15 @@ namespace CLUtil
 			scale = Scale;
 			rotate = Rotate;
 		}
+
+		void ToRotAndTransInverse(cl_float4& matRotation, cl_float2& vecTranslation)
+		{
+			matRotation = cl_float4 {
+				cosf(rotate / 57.3) / scale, -sinf(rotate / 57.3) / scale,
+				sinf(rotate / 57.3) / scale,  cosf(rotate / 57.3) / scale };
+
+			vecTranslation = cl_float2 { -translation.x, -translation.y };
+		}
 	};
 
 	inline const char* MapErrorToString(cl_int error)
