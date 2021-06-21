@@ -7,7 +7,7 @@
 
 namespace CLHelp
 {
-	void CLErrorNotify(const char *errinfo, const void *private_info, size_t cb, void *user_data);
+	void __stdcall CLErrorNotify(const char *errinfo, const void *private_info, size_t cb, void *user_data);
 
 	void ReadCLImageData(cl_command_queue clCommandQueue, const CLImage& clImage, std::vector<int>& tgtData);
 	void SFImageFromCLImage(cl_command_queue clCommandQueue, const CLImage& clImage, SFImage& sfImageOut);

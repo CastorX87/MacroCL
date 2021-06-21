@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CLHelper.h"
 
-void CLHelp::CLErrorNotify(const char *errinfo, const void *private_info, size_t cb, void *user_data)
+ void __stdcall CLHelp::CLErrorNotify(const char *errinfo, const void *private_info, size_t cb, void *user_data)
 {
 	std::cout << "CLErrorNotify -> " << errinfo << std::endl;
 }
